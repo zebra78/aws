@@ -1,0 +1,21 @@
+[toplevel] 
+
+###########
+### IAM ###
+###########
+
+whoami = sts get-caller-identity
+
+###########
+### CFN ###
+###########
+list-stacks = cloudformation list-stacks
+get-template = cloudformation get-template --stack-name myteststack
+get-template-summary = cloudformation get-template-summary --template-body file://template.yaml
+update-stack = cloudformation update-stack --stack-name "$1" --template-url $2 --parameters \
+	ParameterKey=KeyPairName,ParameterValue=SampleKeyPair ParameterKey=SubnetIDs,ParameterValue=SampleSubnetID1
+
+#cloudformation update-stack --stack-name mystack --template-url https://s3.amazonaws.com/sample/updated.template --parameters ParameterKey=KeyPairName,ParameterValue=SampleKeyPair ParameterKey=SubnetIDs,ParameterValue=SampleSubnetID1
+#get-template-summary = cloudformation get-template-summary --template-body file://"$1"
+#list-stacks-ready = cloudformation list-stacks --stack-status-filter CREATE_COMPLETE
+#aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE
