@@ -9,6 +9,7 @@ whoami = sts get-caller-identity
 ###########
 ### CFN ###
 ###########
+
 list-stacks = cloudformation list-stacks
 get-template = cloudformation get-template --stack-name myteststack
 get-template-summary = cloudformation get-template-summary --template-body file://template.yaml

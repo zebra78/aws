@@ -27,12 +27,7 @@ Outputs:
         Value: !Ref AppVpc
         Export:
             Name: !Sub "${AWS::StackName}-Vpc"
-
-    VpcCIDR:
-        Description: Id of Vpc
-        Value: !GetAtt AppVpc.CidrBlock
-        Export:
-            Name: !Sub "${AWS::StackName}-VpcCIDR"        
+      
 
 
 # https://github.com/widdix/learn-cloudformation/blob/master/lab11-output-exports/sample-solution-export.yaml
