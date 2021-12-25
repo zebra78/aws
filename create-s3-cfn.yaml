@@ -4,10 +4,10 @@ Description: Simple S3 Bucket test
 Parameters:
   BucketName:
     Type: String
+    Default: mm009780s3bucket
     Description: The name of the S3 Bucket to create
 
 Resources:
-
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:

@@ -10,11 +10,110 @@ whoami = sts get-caller-identity
 ### CFN ###
 ###########
 
-list-stacks = cloudformation list-stacks
-get-template = cloudformation get-template --stack-name myteststack
-get-template-summary = cloudformation get-template-summary --template-body file://template.yaml
-update-stack = cloudformation update-stack --stack-name "$1" --template-url $2 --parameters \
-	ParameterKey=KeyPairName,ParameterValue=SampleKeyPair ParameterKey=SubnetIDs,ParameterValue=SampleSubnetID1
+list-stacks =
+  !f() {
+    aws cloudformation list-stacks
+  }; f
+
+get-template =
+  !f() {
+    aws cloudformation get-template --stack-name "${1}"
+  }; f
+
+get-template-summary = 
+  !f() {
+    aws cloudformation get-template-summary --template-body "$1"
+  }; f
+
+create-stack =
+  !f() {
+	aws cloudformation create-stack --stack-name "$1" --template-body "$2" --parameters "$3"
+  }; f
+
+update-stack =
+  !f() {
+	aws cloudformation update-stack --stack-name "$1" --template-body "$2" --parameters "$3"
+  }; f
+
+###########
+### EC2 ###
+###########
+
+amazon-linux-amis = ec2 describe-images \
+  --filter \
+    Name=owner-alias,Values=amazon \
+    Name=name,Values="amzn-ami-hvm-*" \
+    Name=architecture,Values=x86_64 \
+    Name=virtualization-type,Values=hvm \
+    Name=root-device-type,Values=ebs \
+    Name=block-device-mapping.volume-type,Values=gp2 \
+  --query "reverse(sort_by(Images, &CreationDate))[*].[ImageId,Name,Description]" \
+  --output text
+
+running-instances = ec2 describe-instances \
+  --filter Name=instance-state-name,Values=running \
+  --output table \
+  --query 'Reservations[].Instances[].{ID: InstanceId,Hostname: PublicDnsName,Name: Tags[?Key==`Name`].Value | [0],Type: InstanceType, Platform: Platform || `Linux`}'
+
+list-instances =
+  !f() {
+    echo "Filtering by \`$1\`"
+    for region in $(aws ec2 describe-regions --query "Regions[*].RegionName" --output text | tr "\t" "\n" | grep "$1")
+      do
+        echo "\nListing Instances in region:'$region'..."
+        aws ec2 describe-instances --region $region \
+        --output table \
+        --query "Reservations[*].Instances[*].{
+                Instance:InstanceId,
+                Type:InstanceType,
+                AZ:Placement.AvailabilityZone,
+                KeyName:KeyName,
+                Name:Tags[?Key==\`Name\`]|[0].Value,
+                Project:Tags[?Key==\`project\`]|[0].Value,
+                IP:PublicIpAddress,
+                State:State.Name,
+                CPUcores:CpuOptions.CoreCount,
+                CPUThreads:CpuOptions.ThreadsPerCore
+        }"
+      done
+  }; f 
+
+connect-ssh =
+  !f() {
+    instance_output=$(aws ec2 describe-instances \
+                        --instance-ids "${1}" \
+                        --query Reservations[0].Instances[0])
+    ssh_key_file=$(jp -u KeyName <<< "$instance_output")".pem"
+    public_ip=$(jp -u PublicIpAddress <<< "$instance_output")
+    if ! [ -f "$ssh_key_file" ];
+    then
+      echo "Error: Could not locate SSH key: "$ssh_key_file" in current" \
+           "working direcory"
+      exit 1
+    fi
+    if [ "$public_ip" == "null" ];
+    then
+      echo "EC2 Instance: "${1}" does not have a public IP address." \
+           "Unable to connect with SSH."
+      exit 1
+    fi
+    ssh -i "$ssh_key_file" ec2-user@"$public_ip"
+  }; f
+
+search-instances =
+  !f() {
+    aws ec2 describe-instances \
+    --filters Name=instance-state-name,Values=running,stopped \
+    --query "Reservations[].Instances[].{Name: (Tags[?Key==\`Name\`].Value)[0],
+                                        Id: InstanceId,
+                                        PrivateIpAddress: PrivateIpAddress,
+                                        GroupId: SecurityGroups[].GroupId|join(\`,\`,@)}[?contains(Name,\`"${1}"\`)]" \
+    --out table
+  }; f
+#get-template = cloudformation get-template --stack-name "${1}"
+#get-template-summary = cloudformation get-template-summary --template-body file://template.yaml
+#update-stack = cloudformation update-stack --stack-name "$1" --template-url $2 --parameters \
+#	ParameterKey=KeyPairName,ParameterValue=SampleKeyPair ParameterKey=SubnetIDs,ParameterValue=SampleSubnetID1
 
 #cloudformation update-stack --stack-name mystack --template-url https://s3.amazonaws.com/sample/updated.template --parameters ParameterKey=KeyPairName,ParameterValue=SampleKeyPair ParameterKey=SubnetIDs,ParameterValue=SampleSubnetID1
 #get-template-summary = cloudformation get-template-summary --template-body file://"$1"

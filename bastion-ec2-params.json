@@ -1,6 +1,6 @@
 [
     {
         "ParameterKey": "Vpc",
-        "ParameterValue": "mm009780Vpc3"
+        "ParameterValue": "bastion-vpc-26"
     }  
 ]

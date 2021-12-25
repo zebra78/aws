@@ -1,10 +1,6 @@
 [
   {
-    "Parameters": {
-      "MyS3BucketNameRef": {
-        "Type": "AWS::S3::Bucket",
-        "ParameterProperty": "mm009780s3bucket"
-      }
-    }
-  }
+      "ParameterKey": "BucketName",
+      "ParameterValue": "mm009780s3bucket2"
+  }  
 ]

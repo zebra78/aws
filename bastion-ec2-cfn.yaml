@@ -2,6 +2,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Create a bastion setup'
 
+Parameters:
+    Vpc:
+        Description: The name of the stack that exports the values
+        Type: String
+        Default: bastion-vpc
+
 Resources:
     BastionVpc:
         Type: AWS::EC2::VPC
@@ -12,7 +18,7 @@ Resources:
             InstanceTenancy: default
             Tags:
             -   Key: Name
-                Value: bastion-vpc
+                Value: !Ref Vpc
 
     BastionIgw:
         Type: AWS::EC2::InternetGateway
