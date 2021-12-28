@@ -1,6 +1,34 @@
 [
     {
-        "ParameterKey": "Vpc",
+        "ParameterKey": "VpcParam",
         "ParameterValue": "bastion-vpc-26"
-    }  
+    },
+    {
+        "ParameterKey": "IGWParam",
+        "ParameterValue": "bastion-igw-26"
+    },
+    {
+        "ParameterKey": "RTParam",
+        "ParameterValue": "bastion-rt-26"
+    },
+    {
+        "ParameterKey": "PubSn1Param",
+        "ParameterValue": "bastion-pubsn1-26"
+    },
+    {
+        "ParameterKey": "PubSn2Param",
+        "ParameterValue": "bastion-pubsn2-26"
+    },
+    {
+        "ParameterKey": "PubSg1Param",
+        "ParameterValue": "bastion-sg1-26"
+    },
+    {
+        "ParameterKey": "JumpServerParam",
+        "ParameterValue": "bastion-js-26"
+    },
+    {
+        "ParameterKey": "ImageIdParam",
+        "ParameterValue": "ami-0002bdad91f793433"
+    } 
 ]

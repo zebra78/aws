@@ -3,10 +3,38 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Create a bastion setup'
 
 Parameters:
-    Vpc:
+    VpcParam:
         Description: The name of the stack that exports the values
         Type: String
         Default: bastion-vpc
+    IGWParam:
+        Description: The IGWParam
+        Type: String
+        Default: bastion-igw
+    RTParam:
+        Description: The RTParam
+        Type: String
+        Default: bastion-rt
+    PubSn1Param:
+        Description: The PubSn1Param
+        Type: String
+        Default: bastion-pubsn1
+    PubSn2Param:
+        Description: The PubSn2Param
+        Type: String
+        Default: bastion-pubsn2
+    PubSg1Param:
+        Description: PubSg1Param
+        Type: String
+        Default: bastion-pubSg1
+    JumpServerParam:
+        Description: The JumpServerParam
+        Type: String
+        Default: bastion-jumpserver
+    ImageIdParam:
+        Description: The ImageIdParam
+        Type: String
+        Default: bastion-imageid     
 
 Resources:
     BastionVpc:
@@ -18,14 +46,14 @@ Resources:
             InstanceTenancy: default
             Tags:
             -   Key: Name
-                Value: !Ref Vpc
+                Value: !Ref VpcParam
 
     BastionIgw:
         Type: AWS::EC2::InternetGateway
         Properties:
             Tags:
             -   Key: Name
-                Value: bastion-igw
+                Value: !Ref IGWParam
 
     BastionIgwAttachToBastionVpc:
         Type: AWS::EC2::VPCGatewayAttachment
@@ -42,7 +70,7 @@ Resources:
                 Ref: BastionVpc
             Tags:
             - Key: Name
-              Value: bastion-rt-igw
+              Value: !Ref RTParam
 
     BastionRtIgwAddRoute:
         Type: AWS::EC2::Route
@@ -60,10 +88,10 @@ Resources:
             VpcId:
                 Ref: BastionVpc
             CidrBlock: 10.0.1.0/24
-            AvailabilityZone: "us-east-2a"
+            AvailabilityZone: "ap-south-1a"
             Tags:
             - Key: Name
-              Value: bastion-pub-sn1
+              Value: !Ref PubSn1Param
 
     BastionPubSn2:
         Type: AWS::EC2::Subnet
@@ -71,10 +99,10 @@ Resources:
             VpcId:
                 Ref: BastionVpc
             CidrBlock: 10.0.2.0/24
-            AvailabilityZone: "us-east-2a"
+            AvailabilityZone: "ap-south-1b"
             Tags:
             - Key: Name
-              Value: bastion-pub-sn2
+              Value: !Ref PubSn2Param
 
     BastionRtIgwAssociateBastionPubSn1:
         Type: AWS::EC2::SubnetRouteTableAssociation
@@ -106,13 +134,13 @@ Resources:
               CidrIp: 0.0.0.0/0
             Tags:
             - Key: Name
-              Value: bastion-pub-sg1
+              Value: !Ref PubSg1Param
 
     JumpServer:
         Type: AWS::EC2::Instance
         Properties:
             InstanceType: t2.micro
-            ImageId: ami-0b500ef59d8335eee
+            ImageId: !Ref ImageIdParam
             KeyName: bastion
             NetworkInterfaces: 
             - AssociatePublicIpAddress: "true"
@@ -123,7 +151,7 @@ Resources:
                 Ref:    "BastionPubSn1"
             Tags:                
             - Key: Name
-              Value: bastion-jumpserver-ec2
+              Value: !Ref JumpServerParam
 
 Outputs:
     RootVpc:

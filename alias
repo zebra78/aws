@@ -35,25 +35,54 @@ update-stack =
 	aws cloudformation update-stack --stack-name "$1" --template-body "$2" --parameters "$3"
   }; f
 
+describe-stack-events = 
+  !f() {
+    aws cloudformation describe-stack-events --stack-name "$1"
+  }; f
+  
+
 ###########
 ### EC2 ###
 ###########
 
-amazon-linux-amis = ec2 describe-images \
+
+
+amazon-free-ami = ec2 describe-images \
+    --region ap-south-1 \
+#    --image-ids ami-0002bdad91f793433 \
+    --filter \
+          Name=architecture,Values=x86_64 \
+          Name=state,Values=available \
+          Name=name,Values=amzn2-ami-hvm-2.0.????????.?-x86_64-gp2 \          
+    --query "reverse(sort_by(Images, &CreationDate))[*].[ImageId, CreationDate, OwnerId, State, PlatformDetails, Name, Description]" \
+    --output text
+
+amazon-linux-amis = ec2 describe-images --region ap-south-1 \
   --filter \
-    Name=owner-alias,Values=amazon \
-    Name=name,Values="amzn-ami-hvm-*" \
-    Name=architecture,Values=x86_64 \
-    Name=virtualization-type,Values=hvm \
-    Name=root-device-type,Values=ebs \
-    Name=block-device-mapping.volume-type,Values=gp2 \
-  --query "reverse(sort_by(Images, &CreationDate))[*].[ImageId,Name,Description]" \
+      Name=owner-alias,Values=amazon \
+      Name=name,Values="amzn-ami-hvm-*" \
+      Name=architecture,Values=x86_64 \
+      Name=virtualization-type,Values=hvm \
+      Name=root-device-type,Values=ebs \
+      Name=block-device-mapping.volume-type,Values=gp2 \
+  --query "reverse(sort_by(Images, &CreationDate))[*].[ImageId, CreationDate, OwnerId, State, PlatformDetails, Name, Description]" \
   --output text
 
-running-instances = ec2 describe-instances \
-  --filter Name=instance-state-name,Values=running \
-  --output table \
-  --query 'Reservations[].Instances[].{ID: InstanceId,Hostname: PublicDnsName,Name: Tags[?Key==`Name`].Value | [0],Type: InstanceType, Platform: Platform || `Linux`}'
+
+running-instances = 
+  !f() {
+    aws ec2 describe-instances \
+    --filter \
+        Name=instance-state-name,Values=running \
+        Name=tag:Name,Values=*"$1"* \
+    --query \
+        'Reservations[].Instances[].{ID: InstanceId, 
+            Hostname: PublicDnsName, 
+            PublicIp: PublicIpAddress,
+            Name: Tags[?Key==`Name`].Value | [0],Type: InstanceType, 
+            Platform: Platform || `Linux`}' \
+    --output table
+  }; f
 
 list-instances =
   !f() {
@@ -119,3 +148,4 @@ search-instances =
 #get-template-summary = cloudformation get-template-summary --template-body file://"$1"
 #list-stacks-ready = cloudformation list-stacks --stack-status-filter CREATE_COMPLETE
 #aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE
+
